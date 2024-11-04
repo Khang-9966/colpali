@@ -1,4 +1,4 @@
 from .idefics_2 import BiIdefics2, ColIdefics2, ColIdefics2Processor
 from .paligemma import BiPali, BiPaliProcessor, BiPaliProj, ColPali, ColPaliProcessor
 from .qwen2 import BiQwen2, BiQwen2Processor, ColQwen2, ColQwen2Processor
-from .internvl import InternVL2Processor, ColInternVL2, ColInternVL2Processor
+from .internvl2 import InternVL2Processor, ColInternVL2, ColInternVL2Processor
