@@ -46,6 +46,7 @@ class InternVLChatConfig(PretrainedConfig):
 
         if llm_config is None:
             llm_config = {}
+            llm_config['architectures'] = ['Qwen2ForCausalLM']
             logger.info('llm_config is None. Initializing the LlamaConfig config with default values (`LlamaConfig`).')
 
         self.vision_config = InternVisionConfig(**vision_config)

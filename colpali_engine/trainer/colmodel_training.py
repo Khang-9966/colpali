@@ -69,9 +69,10 @@ class ColModelTrainingConfig:
             self.model.load_adapter(self.pretrained_peft_model_name_or_path)
 
             print(f"Loaded pretrained adapter from {self.pretrained_peft_model_name_or_path}")
-
+        
         if self.peft_config is not None:
             print("Configurating PEFT model")
+
             if self.processor is None:
                 # Might be deprecated - use the "else" branch
                 self.model = prepare_model_for_kbit_training(self.model)  # use_gradient_checkpointing=True

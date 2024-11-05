@@ -11,7 +11,7 @@ config:
   model:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.ColInternVL2
-    pretrained_model_name_or_path: "./InternVL2-1B"
+    pretrained_model_name_or_path: "./InternVL2-1B-init-linear"
     torch_dtype:  !ext torch.bfloat16
     # use_cache: false
     attn_implementation: "flash_attention_2"
@@ -36,7 +36,7 @@ config:
     output_dir: null
     overwrite_output_dir: true
     num_train_epochs: 1
-    per_device_train_batch_size: 4
+    per_device_train_batch_size: 6
     gradient_checkpointing: false
     # 6 x 8 gpus = 48 batch size
     gradient_accumulation_steps: 1
@@ -44,7 +44,7 @@ config:
     eval_strategy: "steps"
     # dataloader_num_workers: 8
     # bf16: true
-    save_steps: 500
+    save_steps: 100
     logging_steps: 10
     eval_steps: 100
     warmup_steps: 100
@@ -62,5 +62,6 @@ config:
     bias: "none"
     task_type: "FEATURE_EXTRACTION"
     target_modules: '(.*(model).*(down_proj|gate_proj|up_proj|k_proj|q_proj|v_proj|o_proj).*$|.*(custom_text_proj).*$)'
+    # modules_to_save: 'custom_text_proj'
     # target_modules: '(.*(language_model).*(down_proj|gate_proj|up_proj|k_proj|q_proj|v_proj|o_proj).*$|.*(custom_text_proj).*$)'
 
