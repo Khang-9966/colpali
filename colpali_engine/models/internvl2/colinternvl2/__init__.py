@@ -1,1 +1,2 @@
-
+from .processing_colinternvl2 import ColInternVL2Processor
+from .modeling_colinternvl2 import ColInternVL2

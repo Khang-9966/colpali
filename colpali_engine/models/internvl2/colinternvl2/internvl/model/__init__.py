@@ -7,7 +7,7 @@
 import math
 
 import torch
-from internvl.model.internvl_chat import InternVLChatConfig, InternVLChatModel
+from .internvl_chat import InternVLChatConfig, InternVLChatModel
 from transformers import AutoTokenizer
 
 
