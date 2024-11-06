@@ -16,7 +16,7 @@ class ColInternVL2(InternVLChatModel):
     def __init__(self, config: InternVLChatConfig):
         super().__init__(config=config)
         self.dim = 128
-        self.custom_text_proj = nn.Linear(self.language_model.model.config.hidden_size, self.dim )
+        self.custom_text_proj = nn.Linear(self.language_model.model.config.hidden_size, self.dim ) #, bias=False)
         self.padding_side = "left"
         self.img_context_token_id = 151648
         # self.post_init()
@@ -25,11 +25,9 @@ class ColInternVL2(InternVLChatModel):
     def init_linear(self): 
         print(self.language_model.model.embed_tokens.weight)
         stdv = 1. / math.sqrt(self.custom_text_proj.weight.size(1))
-        print(stdv,self.custom_text_proj.weight.data)
-        print(self.custom_text_proj.weight.data.uniform_(-stdv, stdv))
-        print(self.custom_text_proj.bias.data.uniform_(-stdv, stdv))
         self.custom_text_proj.weight.data = self.custom_text_proj.weight.data.uniform_(-stdv, stdv)
-        self.custom_text_proj.bias.data = self.custom_text_proj.bias.data.uniform_(-stdv, stdv)
+        if self.custom_text_proj.bias is not None:
+            self.custom_text_proj.bias.data = self.custom_text_proj.bias.data.uniform_(-stdv, stdv)
 
 
     def forward(
