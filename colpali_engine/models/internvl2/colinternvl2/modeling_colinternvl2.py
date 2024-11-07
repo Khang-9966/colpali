@@ -55,15 +55,15 @@ class ColInternVL2(InternVLChatModel):
         B, N, C = input_embeds.shape
         
         if pixel_values is not None:
+            
             pixel_values = pixel_values.type(self.vision_model.embeddings.patch_embedding.weight.dtype)
             vit_embeds = self.extract_feature(pixel_values)
             # image_flags = image_flags.squeeze(-1)
             # vit_embeds = vit_embeds[image_flags == 1]
             vit_batch_size = pixel_values.shape[0]
-    
             
             input_embeds = input_embeds.reshape(B * N, C)
-    
+            
             if torch.distributed.is_initialized() and torch.distributed.get_rank() == 0:
                 print(f'dynamic ViT batch size: {vit_batch_size}, images per sample: {vit_batch_size / B}, dynamic token length: {N}')
                 if statistics is not None:
@@ -77,6 +77,7 @@ class ColInternVL2(InternVLChatModel):
                 input_embeds[selected] = input_embeds[selected] * 0.0 + vit_embeds.reshape(-1, C)
                 ignore_flag = False
             except Exception as e:
+                
                 vit_embeds = vit_embeds.reshape(-1, C)
                 print(f'warning: {e}, input_embeds[selected].shape={input_embeds[selected].shape}, '
                       f'vit_embeds.shape={vit_embeds.shape}')
@@ -85,7 +86,7 @@ class ColInternVL2(InternVLChatModel):
                 ignore_flag = True
     
             input_embeds = input_embeds.reshape(B, N, C)
-
+        
         outputs = self.language_model.model(
             inputs_embeds=input_embeds,
             attention_mask=attention_mask,
@@ -96,7 +97,7 @@ class ColInternVL2(InternVLChatModel):
             output_hidden_states=True,
             return_dict=return_dict,
         )
-
+        
         last_hidden_states = outputs[0].type(self.custom_text_proj.weight.dtype)
         proj = self.custom_text_proj(last_hidden_states)  # (batch_size, sequence_length, dim)
 

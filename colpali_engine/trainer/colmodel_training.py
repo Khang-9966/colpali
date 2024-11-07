@@ -170,7 +170,6 @@ class ColModelTraining:
 
         qs = []
         ps = []
-
         device = self.model.device
         with torch.no_grad():
             for dataloader in [dataloader_with_query, dataloader_without_query]:
@@ -178,7 +177,7 @@ class ColModelTraining:
                     # feed only kwargs with 'doc_' prefix
                     doc = self.model(**{k[4:]: v.to(device) for k, v in batch.items() if k.startswith("doc")})
                     ps.extend(list(torch.unbind(doc.to("cpu"))))
-
+                    
                     if "query_input_ids" in batch:
                         query = self.model(
                             input_ids=batch["query_input_ids"].to(device),

@@ -14,19 +14,26 @@ from PIL import Image
 from torchvision.transforms.functional import InterpolationMode
 from transformers import AutoModel, AutoTokenizer
 from .internvl.conversation import get_conv_template
-from transformers import BatchFeature
+from transformers import BatchFeature, ProcessorMixin
 
-class ColInternVL2Processor(BaseVisualRetrieverProcessor):
+class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
     """
     Processor for ColInternVL2.
     """
-
-    def __init__(self, pretrained_model_name_or_path, template="Hermes-2", **kwargs):
-        super().__init__()
-        self.template = template
+    attributes = [ "tokenizer"]
+    image_processor_class = "InternVL2ImageProcessor"
+    tokenizer_class = ("Qwen2Tokenizer", "Qwen2TokenizerFast")
+    
+    def __init__(self, tokenizer,  **kwargs):
+        self.template = "Hermes-2"
         self.num_image_token = 256
         self.max_num = 6
-        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path, trust_remote_code=True, use_fast=False)
+
+        if isinstance(tokenizer, str):
+            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer, trust_remote_code=True, use_fast=False)
+        else:
+            self.tokenizer = tokenizer
+            
         self.tokenizer.padding_side = 'left'
         self.IMAGENET_MEAN = (0.485, 0.456, 0.406)
         self.IMAGENET_STD = (0.229, 0.224, 0.225)
@@ -35,9 +42,10 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor):
         self.IMG_END_TOKEN='</img>'
         self.img_context_token_id = self.tokenizer.convert_tokens_to_ids(self.IMG_CONTEXT_TOKEN)
         self.system_message = '你是由上海人工智能实验室联合商汤科技开发的书生多模态大模型，英文名叫InternVL, 是一个有用无害的人工智能助手。'
+        super().__init__(tokenizer)
         
-    def from_pretrained(pretrained_model_name_or_path, template="Hermes-2", **kwargs):
-        return ColInternVL2Processor(pretrained_model_name_or_path, template=template, **kwargs)
+    # def from_pretrained(pretrained_model_name_or_path, template="Hermes-2", **kwargs):
+    #     return ColInternVL2Processor(pretrained_model_name_or_path, template=template, **kwargs)
         
     def build_transform(self, input_size):
         MEAN, STD = self.IMAGENET_MEAN, self.IMAGENET_STD
@@ -145,7 +153,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor):
             "pixel_values" : pixel_values,
             "input_ids" : input_ids,
             "attention_mask" : attention_mask,
-            "image_flags" : image_flags
+            # "image_flags" : image_flags
         })
         return batch_doc    
     
