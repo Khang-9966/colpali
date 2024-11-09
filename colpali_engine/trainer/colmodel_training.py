@@ -109,6 +109,7 @@ class ColModelTraining:
                 processor=self.config.processor,
                 max_length=self.config.max_length,
             )
+            
         self.current_git_hash = os.popen("git rev-parse HEAD").read().strip()
         self.retrieval_evaluator = CustomRetrievalEvaluator()
 

@@ -1,7 +1,7 @@
 import os
 from typing import List, Tuple, cast
 
-from datasets import Dataset, DatasetDict, concatenate_datasets, load_dataset
+from datasets import Dataset, DatasetDict, concatenate_datasets, load_dataset, load_from_disk
 
 USE_LOCAL_DATASET = os.environ.get("USE_LOCAL_DATASET", "1") == "1"
 
@@ -17,7 +17,8 @@ def add_metadata_column(dataset, column_name, value):
 def load_train_set() -> DatasetDict:
     ds_path = "colpali_train_set"
     base_path = "./data_dir/" if USE_LOCAL_DATASET else "vidore/"
-    ds_dict = cast(DatasetDict, load_dataset(base_path + ds_path))
+    # ds_dict = cast(DatasetDict, load_dataset(base_path + ds_path))
+    ds_dict = cast(DatasetDict, load_from_disk(base_path + ds_path))
     return ds_dict
 
 

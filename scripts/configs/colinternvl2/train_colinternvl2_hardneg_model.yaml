@@ -1,16 +1,16 @@
 config:
   (): colpali_engine.trainer.colmodel_training.ColModelTrainingConfig
-  output_dir: !path ../../../models/colqwen2-multi-hardneg
+  output_dir: !path ../../../train_models/InternVL2_batch4_hardneg
   processor:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.ColQwen2Processor
-    pretrained_model_name_or_path:  "./models/colqwen2_base" # "./models/paligemma-3b-mix-448"
+    pretrained_model_name_or_path:  "./InternVL2-1B" # "./models/paligemma-3b-mix-448"
     # max_length: 50
 
   model:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.ColQwen2
-    pretrained_model_name_or_path: "./models/colqwen2_base"
+    pretrained_model_name_or_path: "train_models/InternVL2_batch4_merged"
     torch_dtype:  !ext torch.bfloat16
     use_cache: false
 #    device_map: "auto"
@@ -29,11 +29,30 @@ config:
   add_suffix: true
   loss_func:
     (): colpali_engine.loss.late_interaction_losses.ColbertPairwiseNegativeCELoss
-  tr_args: !import ../tr_args/default_tr_args.yaml
+  tr_args: #!import ../tr_args/default_tr_args.yaml
+    (): transformers.training_args.TrainingArguments
+    output_dir: null
+    overwrite_output_dir: true
+    num_train_epochs: 1
+    per_device_train_batch_size: 4
+    gradient_checkpointing: false
+    # 6 x 8 gpus = 48 batch size
+    gradient_accumulation_steps: 4
+    per_device_eval_batch_size: 4
+    eval_strategy: "steps"
+    dataloader_num_workers: 8
+    bf16: true
+    save_steps: 100
+    logging_steps: 10
+    eval_steps: 100
+    warmup_steps: 100
+    learning_rate: 5e-5
+    save_total_limit: 1
+    
   peft_config:
     (): peft.LoraConfig
     r: 32
-    lora_alpha: 32
+    lora_alpha: 64
     lora_dropout: 0.1
     init_lora_weights: "gaussian"
     bias: "none"

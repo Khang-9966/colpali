@@ -41,7 +41,8 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
         self.IMG_START_TOKEN='<img>'
         self.IMG_END_TOKEN='</img>'
         self.img_context_token_id = self.tokenizer.convert_tokens_to_ids(self.IMG_CONTEXT_TOKEN)
-        self.system_message = '你是由上海人工智能实验室联合商汤科技开发的书生多模态大模型，英文名叫InternVL, 是一个有用无害的人工智能助手。'
+        # self.system_message = '你是由上海人工智能实验室联合商汤科技开发的书生多模态大模型，英文名叫InternVL, 是一个有用无害的人工智能助手。'
+        self.system_message = 'Bạn là một mô hình trí tuệ nhân tạo đa phương thức Tiếng Việt có tên gọi là Vintern, được phát triển bởi người Việt. Bạn là một trợ lý trí tuệ nhân tạo hữu ích và không gây hại.'
         super().__init__(tokenizer)
         
     # def from_pretrained(pretrained_model_name_or_path, template="Hermes-2", **kwargs):
