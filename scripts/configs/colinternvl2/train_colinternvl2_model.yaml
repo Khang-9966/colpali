@@ -1,6 +1,6 @@
 config:
   (): colpali_engine.trainer.colmodel_training.ColModelTrainingConfig
-  output_dir: !path ../../../train_models/Vintern1B_batch4_lora64_maxnum_4
+  output_dir: !path ../../../train_models/Vintern1B_batch4_lora64_maxnum_4_add_hatto
   processor:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.ColInternVL2Processor
@@ -11,7 +11,7 @@ config:
   model:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.ColInternVL2
-    pretrained_model_name_or_path: "./Vintern-1B-v2-init-linear"
+    pretrained_model_name_or_path: "./train_models/ColVintern_1B_v2_colpali_DocVQA_merged"
     torch_dtype:  !ext torch.bfloat16
     # use_cache: false
     attn_implementation: "flash_attention_2"
@@ -39,7 +39,7 @@ config:
     per_device_train_batch_size: 4
     gradient_checkpointing: false
     # 6 x 8 gpus = 48 batch size
-    gradient_accumulation_steps: 2
+    gradient_accumulation_steps: 4
     per_device_eval_batch_size: 4
     eval_strategy: "steps"
     dataloader_num_workers: 8

@@ -15,7 +15,27 @@ from torchvision.transforms.functional import InterpolationMode
 from transformers import AutoModel, AutoTokenizer
 from .internvl.conversation import get_conv_template
 from transformers import BatchFeature, ProcessorMixin
+import gc
 
+def get_torch_device(device: str = "auto") -> str:
+    """
+    Returns the device (string) to be used by PyTorch.
+
+    `device` arg defaults to "auto" which will use:
+    - "cuda:0" if available
+    - else "mps" if available
+    - else "cpu".
+    """
+
+    if device == "auto":
+        if torch.cuda.is_available():
+            device = "cuda:0"
+        elif torch.backends.mps.is_available():  # for Apple Silicon
+            device = "mps"
+        else:
+            device = "cpu"
+    return device
+    
 class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
     """
     Processor for ColInternVL2.
@@ -26,8 +46,9 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
     
     def __init__(self, tokenizer,  **kwargs):
         self.template = "Hermes-2"
-        self.num_image_token = 256
-        self.max_num = 6
+        self.num_image_token = 256        
+        # self.max_num = 6
+        self.max_num = 4
 
         if isinstance(tokenizer, str):
             self.tokenizer = AutoTokenizer.from_pretrained(tokenizer, trust_remote_code=True, use_fast=False)
@@ -208,3 +229,41 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
         patch_size: int,
     ) -> Tuple[int, int]:
         raise NotImplementedError("This method is not implemented for ColInternVL2.")
+        
+    def score_multi_vector(
+        self,
+        qs: List[torch.Tensor],
+        ps: List[torch.Tensor],
+        batch_size: int = 128,
+        device: Optional[Union[str, torch.device]] = None,
+    ) -> torch.Tensor:
+        """
+        Compute the MaxSim score (ColBERT-like) for the given multi-vector query and passage embeddings.
+        """
+        device = device or get_torch_device("auto")
+
+        if len(qs) == 0:
+            raise ValueError("No queries provided")
+        if len(ps) == 0:
+            raise ValueError("No passages provided")
+
+        scores_list: List[torch.Tensor] = []
+
+        for i in range(0, len(qs), batch_size):
+            scores_batch = []
+            qs_batch = torch.nn.utils.rnn.pad_sequence(qs[i : i + batch_size], batch_first=True, padding_value=0).float().to(
+                device
+            )
+            for j in range(0, len(ps), batch_size):
+                ps_batch = torch.nn.utils.rnn.pad_sequence(
+                    ps[j : j + batch_size], batch_first=True, padding_value=0
+                ).float().to(device)
+                scores_batch.append(torch.einsum("bnd,csd->bcns", qs_batch, ps_batch).max(dim=3)[0].sum(dim=2))
+            scores_batch = torch.cat(scores_batch, dim=1).cpu()
+            scores_list.append(scores_batch)
+
+        scores = torch.cat(scores_list, dim=0)
+        assert scores.shape[0] == len(qs), f"Expected {len(qs)} scores, got {scores.shape[0]}"
+
+        scores = scores.to(torch.float32)
+        return scores
