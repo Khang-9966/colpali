@@ -10,8 +10,20 @@ class ContrastiveTrainer(Trainer):
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         query_outputs = model(input_ids=inputs["query_input_ids"], attention_mask=inputs["query_attention_mask"])
-        # feed only kwargs with 'doc_' prefix
-        doc_outputs = model(**{k[4:]: v for k, v in inputs.items() if k.startswith("doc")})
+
+        has_im_doc = any(k.startswith("im_doc_") for k in inputs.keys())
+        has_text_doc = "text_doc_input_ids" in inputs
+        
+        if has_im_doc and has_text_doc:
+            im_doc_outputs = model(**{k[7:]: v for k, v in inputs.items() if k.startswith("im_doc_")})
+            text_doc_outputs = model(input_ids=inputs["text_doc_input_ids"], attention_mask=inputs["text_doc_attention_mask"])
+            doc_outputs = torch.cat((im_doc_outputs, text_doc_outputs), 0)
+        elif has_im_doc:
+            doc_outputs = model(**{k[7:]: v for k, v in inputs.items() if k.startswith("im_doc_")})
+        elif has_text_doc:
+            doc_outputs = model(input_ids=inputs["text_doc_input_ids"], attention_mask=inputs["text_doc_attention_mask"])
+
+        
         if "neg_doc_input_ids" in inputs:
             neg_doc_outputs = model(**{k[8:]: v for k, v in inputs.items() if k.startswith("neg_doc")})
             loss = self.loss_func(query_outputs, doc_outputs, neg_doc_outputs)
@@ -24,15 +36,24 @@ class ContrastiveTrainer(Trainer):
         """This function is used to generate predictions and return the loss for the given inputs."""
         if not prediction_loss_only:
             raise ValueError("prediction_step is only called with prediction_loss_only=True")
-
         with torch.no_grad():
-            # feed only kwargs with 'doc_' prefix
-            doc_outputs = model(**{k[4:]: v for k, v in inputs.items() if k.startswith("doc")})
             query_outputs = model(input_ids=inputs["query_input_ids"], attention_mask=inputs["query_attention_mask"])
+            
+            has_im_doc = any(k.startswith("im_doc_") for k in inputs.keys())
+            has_text_doc = "text_doc_input_ids" in inputs
+            
+            if has_im_doc and has_text_doc:
+                im_doc_outputs = model(**{k[7:]: v for k, v in inputs.items() if k.startswith("im_doc_")})
+                text_doc_outputs = model(input_ids=inputs["text_doc_input_ids"], attention_mask=inputs["text_doc_attention_mask"])
+                doc_outputs = torch.cat((im_doc_outputs, text_doc_outputs), 0)
+            elif has_im_doc:
+                doc_outputs = model(**{k[7:]: v for k, v in inputs.items() if k.startswith("im_doc_")})
+            elif has_text_doc:
+                doc_outputs = model(input_ids=inputs["text_doc_input_ids"], attention_mask=inputs["text_doc_attention_mask"])
+            
             if "neg_doc_input_ids" in inputs:
                 neg_doc_outputs = model(**{k[8:]: v for k, v in inputs.items() if k.startswith("neg_doc")})
                 loss = self.loss_func(query_outputs, doc_outputs, neg_doc_outputs)
                 return loss, None, None
-
             loss = self.loss_func(query_outputs, doc_outputs)
             return loss, None, None
