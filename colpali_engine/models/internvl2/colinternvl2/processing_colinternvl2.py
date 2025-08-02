@@ -63,7 +63,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
         self.IMG_END_TOKEN='</img>'
         self.img_context_token_id = self.tokenizer.convert_tokens_to_ids(self.IMG_CONTEXT_TOKEN)
         # self.system_message = '你是由上海人工智能实验室联合商汤科技开发的书生多模态大模型，英文名叫InternVL, 是一个有用无害的人工智能助手。'
-        self.system_message = 'Bạn là một mô hình trí tuệ nhân tạo đa phương thức Tiếng Việt có tên gọi là Vintern, được phát triển bởi người Việt. Bạn là một trợ lý trí tuệ nhân tạo hữu ích và không gây hại.'
+        self.system_message = ''
         super().__init__(tokenizer)
         
     # def from_pretrained(pretrained_model_name_or_path, template="Hermes-2", **kwargs):
@@ -155,7 +155,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
         
         queries = []
         for idx, num_patches in enumerate(num_patches_list):
-            question = "<image>\nDescribe the image."
+            question = "Image: <image>\nDescribe the image."
 
             template = get_conv_template(self.template)
             template.system_message = self.system_message
@@ -178,7 +178,39 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
             # "image_flags" : image_flags
         })
         return batch_doc    
+        
+    def process_docs(
+        self,
+        docs: List[str],
+        max_length: int = 2048,
+        suffix: Optional[str] = None,
+        ) -> BatchFeature:
+        """
+        Process documents for InternVL2.
+        """
     
+        texts_doc: List[str] = []
+    
+        for doc in docs:
+            doc = f"Document: {doc}\nDescribe the document."
+            template = get_conv_template(self.template)
+            template.system_message = self.system_message
+            template.append_message(template.roles[0], doc)
+            template.append_message(template.roles[1], None)
+            doc = template.get_prompt()
+            texts_doc.append(doc)
+    
+        model_inputs = self.tokenizer(texts_doc, return_tensors='pt', max_length=max_length, padding="longest", truncation=True)
+        input_ids = model_inputs['input_ids']  # .to(self.device)
+        attention_mask = model_inputs['attention_mask']  # .to(self.device)
+    
+        batch_doc = BatchFeature({
+            "pixel_values": None,
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+        })
+        return batch_doc
+        
     def process_queries(
         self,
         queries: List[str],
@@ -200,7 +232,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
             query = template.get_prompt()
             texts_query.append(query)
             
-        model_inputs = self.tokenizer(texts_query, return_tensors='pt', max_length=max_length, padding="longest")
+        model_inputs = self.tokenizer(texts_query, return_tensors='pt', max_length=max_length, padding="longest", truncation=True)
         input_ids = model_inputs['input_ids'] #.to(self.device)
         attention_mask = model_inputs['attention_mask'] #.to(self.device)
         

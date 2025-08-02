@@ -15,7 +15,7 @@ class VisualRetrieverCollator:
     def __init__(
         self,
         processor: BaseVisualRetrieverProcessor,
-        max_length: int = 2048,
+        max_length: int = 700,
         add_suffix: bool = True,
     ):
         self.processor = processor

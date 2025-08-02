@@ -1,6 +1,6 @@
 config:
   (): colpali_engine.trainer.colmodel_training.ColModelTrainingConfig
-  output_dir: !path trained_models/Vintern1B_3_5_test
+  output_dir: !path trained_models/Vintern1B_3_5_test_colpali_puretext_bi_encoder
   processor:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.BiInternVL2Processor
@@ -11,6 +11,7 @@ config:
     class_to_instanciate: !ext colpali_engine.models.BiInternVL2
     pretrained_model_name_or_path: "5CD-AI/Vintern-1B-v3_5" 
     torch_dtype:  !ext torch.bfloat16
+    attn_implementation: "flash_attention_2"
 #    device_map: "auto"
 #    quantization_config:
 #      (): transformers.BitsAndBytesConfig
@@ -22,7 +23,7 @@ config:
   dataset_loading_func: !ext colpali_engine.utils.dataset_transformation.load_train_set
   eval_dataset_loader: !import ../data/test_data.yaml
 
-  # max_length: 50
+  max_length: 600
   run_eval: true
   add_suffix: true
   loss_func:
@@ -31,24 +32,28 @@ config:
     (): transformers.training_args.TrainingArguments
     output_dir: null
     overwrite_output_dir: true
-    num_train_epochs: 1
+    num_train_epochs: 0.5
     per_device_train_batch_size: 4
+    gradient_checkpointing: false
+    gradient_accumulation_steps: 4
     per_device_eval_batch_size: 4
     eval_strategy: "steps"
-    dataloader_num_workers: 1
+    dataloader_num_workers: 8
     bf16: true
-    save_steps: 500
+    save_steps: 100
     logging_steps: 10
-    eval_steps: 100
-    warmup_steps: 500
+    eval_steps: 1000
+    warmup_steps: 100
     learning_rate: 0.00005
     save_total_limit: 1
+    # resume_from_checkpoint: true
     deepspeed: "zero_stage2_config.json"
-    # optim: "paged_adamw_8bit"
+    # optim: "adamw_bnb_8bit"
+    
   peft_config:
     (): peft.LoraConfig
-    r: 32
-    lora_alpha: 32
+    r: 8
+    lora_alpha: 16
     lora_dropout: 0.1
     init_lora_weights: "gaussian"
     bias: "none"

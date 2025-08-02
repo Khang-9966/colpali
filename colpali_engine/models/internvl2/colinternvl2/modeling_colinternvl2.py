@@ -18,7 +18,7 @@ class ColInternVL2(InternVLChatModel):
         self.dim = 128
         self.custom_text_proj = nn.Linear(self.language_model.model.config.hidden_size, self.dim ) #, bias=False)
         self.padding_side = "left"
-        self.img_context_token_id = 151648
+        self.img_context_token_id = 151667
         # self.post_init()
         self.init_linear()
     

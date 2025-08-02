@@ -1,17 +1,17 @@
 config:
   (): colpali_engine.trainer.colmodel_training.ColModelTrainingConfig
-  output_dir: !path ../../../train_models/Vintern1B_batch4_lora64_maxnum_4_add_hatto
+  output_dir: !path trained_models/Vintern1B_3_5_test_colpali_puretext
   processor:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.ColInternVL2Processor
-    pretrained_model_name_or_path:  "5CD-AI/Vintern-1B-v2" # "./models/paligemma-3b-mix-448"
+    pretrained_model_name_or_path:  "5CD-AI/Vintern-1B-v3_5" # "./models/paligemma-3b-mix-448"
     # num_image_tokens: 2048
-    # max_length: 50
+    # max_length: 100
 
   model:
     (): colpali_engine.utils.transformers_wrappers.AllPurposeWrapper
     class_to_instanciate: !ext colpali_engine.models.ColInternVL2
-    pretrained_model_name_or_path: "./train_models/ColVintern_1B_v2_colpali_DocVQA_merged"
+    pretrained_model_name_or_path: "5CD-AI/Vintern-1B-v3_5"
     torch_dtype:  !ext torch.bfloat16
     # use_cache: false
     attn_implementation: "flash_attention_2"
@@ -26,7 +26,7 @@ config:
   dataset_loading_func: !ext colpali_engine.utils.dataset_transformation.load_train_set
   eval_dataset_loader: !import ../data/test_data.yaml
 
-  # max_length: 50
+  max_length: 600
   run_eval: true
   add_suffix: true
   loss_func:
@@ -35,28 +35,28 @@ config:
     (): transformers.training_args.TrainingArguments
     output_dir: null
     overwrite_output_dir: true
-    num_train_epochs: 1
+    num_train_epochs: 0.5
     per_device_train_batch_size: 4
     gradient_checkpointing: false
-    # 6 x 8 gpus = 48 batch size
     gradient_accumulation_steps: 4
     per_device_eval_batch_size: 4
     eval_strategy: "steps"
     dataloader_num_workers: 8
     bf16: true
-    save_steps: 500
+    save_steps: 100
     logging_steps: 10
-    eval_steps: 500
-    warmup_steps: 2500
-    learning_rate: 5e-5
+    eval_steps: 1000
+    warmup_steps: 100
+    learning_rate: 0.00005
     save_total_limit: 1
     # resume_from_checkpoint: true
-    # optim: "paged_adamw_8bit"
+    deepspeed: "zero_stage2_config.json"
+    # optim: "adamw_bnb_8bit"
 
   peft_config:
     (): peft.LoraConfig
-    r: 64
-    lora_alpha: 128
+    r: 8
+    lora_alpha: 16
     lora_dropout: 0.1
     init_lora_weights: "gaussian"
     bias: "none"
