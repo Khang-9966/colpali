@@ -18,8 +18,10 @@ def load_train_set() -> DatasetDict:
     ds_path = "colpali_train_set_new"
     # ds_path = "colpali_train_set_300_1900_size_new_seed_150k_hatto"
     base_path = "./data_dir/" if USE_LOCAL_DATASET else "vidore/"
-    # ds_dict = cast(DatasetDict, load_dataset(base_path + ds_path))
-    ds_dict = cast(DatasetDict, load_from_disk(base_path + ds_path))
+    try:
+        ds_dict = cast(DatasetDict, load_dataset(base_path + ds_path))
+    except:
+        ds_dict = cast(DatasetDict, load_from_disk(base_path + ds_path))
     return ds_dict
 
 
