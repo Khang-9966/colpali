@@ -1,0 +1,2 @@
+from .processing_biinternvl2 import BiInternVL2Processor
+from .modeling_biinternvl2 import BiInternVL2
