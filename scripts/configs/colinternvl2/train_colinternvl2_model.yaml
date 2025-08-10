@@ -26,7 +26,7 @@ config:
   dataset_loading_func: !ext colpali_engine.utils.dataset_transformation.load_train_set
   eval_dataset_loader: !import ../data/test_data.yaml
 
-  max_length: 600
+  max_length: 1400
   run_eval: true
   add_suffix: true
   loss_func:

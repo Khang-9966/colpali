@@ -143,6 +143,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
     def process_images(
         self,
         images: List[Image.Image],
+        max_length: int = 1400,
     ) -> BatchFeature:
         """
         Process images for InternVl2.
@@ -166,7 +167,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
             query = query.replace('<image>', image_tokens, 1)
             queries.append(query)
 
-        model_inputs = self.tokenizer(queries, return_tensors='pt', padding=True)
+        model_inputs = self.tokenizer(queries, return_tensors='pt', max_length=max_length, padding="max_length", truncation=True)
         input_ids = model_inputs['input_ids'] #.to(self.device)
         attention_mask = model_inputs['attention_mask'] #.to(self.device)
         pixel_values = torch.cat(pixel_values)
@@ -182,7 +183,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
     def process_docs(
         self,
         docs: List[str],
-        max_length: int = 2048,
+        max_length: int = 1400,
         suffix: Optional[str] = None,
         ) -> BatchFeature:
         """
@@ -200,7 +201,7 @@ class ColInternVL2Processor(BaseVisualRetrieverProcessor, ProcessorMixin):
             doc = template.get_prompt()
             texts_doc.append(doc)
     
-        model_inputs = self.tokenizer(texts_doc, return_tensors='pt', max_length=max_length, padding="longest", truncation=True)
+        model_inputs = self.tokenizer(texts_doc, return_tensors='pt', max_length=max_length, padding="max_length", truncation=True)
         input_ids = model_inputs['input_ids']  # .to(self.device)
         attention_mask = model_inputs['attention_mask']  # .to(self.device)
     
