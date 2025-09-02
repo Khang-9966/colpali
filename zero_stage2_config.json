@@ -21,7 +21,7 @@
     "enabled": "auto"
   },
   "optimizer": {
-    "type": "AdamW",
+    "type": "auto",
     "params": {
       "lr": "auto",
       "betas": [

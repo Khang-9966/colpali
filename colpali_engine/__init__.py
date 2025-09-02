@@ -10,4 +10,6 @@ from .models import (
     ColPaliProcessor,
     ColQwen2,
     ColQwen2Processor,
+   # ColQwen2_5,
+   #  ColQwen2_5_Processor,
 )

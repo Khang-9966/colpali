@@ -118,7 +118,12 @@ class ColModelTraining:
             print("Training with hard negatives")
         else:
             print("Training with in-batch negatives")
-
+            
+        print(self.model.custom_text_proj.base_layer.weight)
+        print(self.model.custom_text_proj.base_layer.weight.sum())
+        print(self.model.custom_text_proj.base_layer.weight.pow(2).sum())
+        self.model.language_model.gradient_checkpointing_enable()
+        
         trainer = ContrastiveTrainer(
             model=self.model,
             train_dataset=self.dataset["train"],

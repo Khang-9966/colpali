@@ -101,6 +101,22 @@ class VisualRetrieverCollator:
                 suffix=self.suffix,
             )
 
+        if batch_text_doc is not None and batch_doc is not None:
+            if batch_doc['input_ids'].shape[1] > batch_text_doc['input_ids'].shape[1]:
+                batch_text_doc = self.processor.process_docs(
+                    docs=texts_document,
+                    max_length=batch_doc['input_ids'].shape[1],
+                    suffix=self.suffix,
+                    padding="max_length"
+                )
+            else  :
+                batch_doc = self.processor.process_images(
+                    images=images,
+                    max_length=batch_text_doc['input_ids'].shape[1],
+                    padding="max_length"
+                )
+
+        
         # Combine all batches
         batch_all = {}
 
